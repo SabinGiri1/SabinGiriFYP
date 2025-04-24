@@ -12,6 +12,8 @@ import Navbar from './components/Navbar'
 import VaccinationAlerts from './pages/VaccinationAlerts'
 import Footer from './components/Footer'
 import { ToastContainer, toast } from 'react-toastify';
+import ProductList from './components/ProductList'
+import MyVaccinations from './components/MyVaccinations'
 
 const App = () => {
   return (
@@ -28,7 +30,10 @@ const App = () => {
         <Route path='/my-profile' element={<MyProfile/>} />
         <Route path='/my-appointments' element={<MyAppointments/>} />
         <Route path='/appointment/:vetId' element={<Appointment/>} />
-        <Route path='/vaccination-alert/:vetId' element={<VaccinationAlerts/>} />
+        <Route path='/vaccination-alerts' element={<VaccinationAlerts/>} />
+        <Route path='/my-vaccinations' element={<MyVaccinations/>} />
+
+        <Route path="/shop" element={<ProductList />} />
       </Routes>
       <Footer/>
     </div>

@@ -71,10 +71,16 @@ const Navbar = () => {
                   My Appointments
                 </p>
                 <p
-                  onClick={() => navigate('vaccination-alerts')}
+                  onClick={() => navigate('/vaccination-alerts')}
                   className='text-gray-700 hover:bg-gray-100 cursor-pointer p-2 rounded transition-colors duration-200'
                 >
                   Vaccination Alerts
+                </p>
+                <p
+                  onClick={() => navigate('/my-vaccinations')}
+                  className='text-gray-700 hover:bg-gray-100 cursor-pointer p-2 rounded transition-colors duration-200'
+                >
+                  My Vaccinations
                 </p>
                 <p
                   onClick={logout}

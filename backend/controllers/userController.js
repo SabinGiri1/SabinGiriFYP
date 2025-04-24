@@ -5,7 +5,7 @@ import userModel from "../models/userModel.js";
 import vetModel from "../models/vetModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import { v2 as cloudinary } from 'cloudinary'
-
+import transporter from '../config/nodemailer.js'
 
 // API to register user
 const registerUser = async (req, res) => {
@@ -122,36 +122,48 @@ const updateProfile = async (req, res) => {
     }
 }
 
-// API to book appointment 
 const bookAppointment = async (req, res) => {
-
     try {
+        const { userId, vetId, slotDate, slotTime } = req.body;
 
-        const { userId, vetId, slotDate, slotTime } = req.body
-        const vetData = await vetModel.findById(vetId).select("-password")
+        console.log("Received Booking Request:", { userId, vetId, slotDate, slotTime });
+
+        const vetData = await vetModel.findById(vetId).select("-password");
+        console.log("Fetched Vet Data:", vetData);
+
+        if (!vetData) {
+            return res.json({ success: false, message: 'Vet not found' });
+        }
 
         if (!vetData.available) {
-            return res.json({ success: false, message: 'Vet Not Available' })
+            return res.json({ success: false, message: 'Vet Not Available' });
         }
 
-        let slots_booked = vetData.slots_booked
+        let slots_booked = vetData.slots_booked || {};
+        console.log("Vet's Current Slots Booked:", slots_booked);
 
-        // checking for slot availablity 
+        // Checking for slot availability
         if (slots_booked[slotDate]) {
             if (slots_booked[slotDate].includes(slotTime)) {
-                return res.json({ success: false, message: 'Slot Not Available' })
-            }
-            else {
-                slots_booked[slotDate].push(slotTime)
+                console.log("Slot Already Booked:", slotDate, slotTime);
+                return res.json({ success: false, message: 'Slot Not Available' });
+            } else {
+                slots_booked[slotDate].push(slotTime);
             }
         } else {
-            slots_booked[slotDate] = []
-            slots_booked[slotDate].push(slotTime)
+            slots_booked[slotDate] = [slotTime];
         }
 
-        const userData = await userModel.findById(userId).select("-password")
+        console.log("Updated Slots Booked:", slots_booked);
 
-        delete vetData.slots_booked
+        const userData = await userModel.findById(userId).select("-password");
+        console.log("Fetched User Data:", userData);
+
+        if (!userData) {
+            return res.json({ success: false, message: 'User not found' });
+        }
+
+        delete vetData.slots_booked; // Avoid saving booked slots in appointment data
 
         const appointmentData = {
             userId,
@@ -161,23 +173,85 @@ const bookAppointment = async (req, res) => {
             amount: vetData.fees,
             slotTime,
             slotDate,
-            date: Date.now()
-        }
+            date: Date.now(),
+        };
 
-        const newAppointment = new appointmentModel(appointmentData)
-        await newAppointment.save()
+        console.log("Final Appointment Data:", appointmentData);
 
-        // save new slots data in vetData
-        await vetModel.findByIdAndUpdate(vetId, { slots_booked })
+        const newAppointment = new appointmentModel(appointmentData);
+        await newAppointment.save();
 
-        res.json({ success: true, message: 'Appointment Booked' })
+        // Save updated slots data in vet model
+        await vetModel.findByIdAndUpdate(vetId, { slots_booked });
+
+        console.log("Appointment successfully booked!");
+
+        // ✅ Email Notification to Vet
+        const vetMailOptions = {
+            from: `Pets Khana<${process.env.SENDER_EMAIL}>`,
+            to: vetData.email,
+            subject: "New Appointment Booking Notification",
+            html: `
+                <h3>Dear Dr. ${vetData.name},</h3>
+                <p>You have a new appointment scheduled.</p>
+                <ul>
+                    <li><strong>Date:</strong> ${slotDate.replace(/_/g, '/')}</li>
+                    <li><strong>Time:</strong> ${slotTime}</li>
+                    <li><strong>Patient:</strong> ${userData.name}</li>
+                    <li><strong>Contact:</strong> ${userData.phone}</li>
+                    <li><strong>Email:</strong> ${userData.email}</li>
+                    <li><strong>Address:</strong> ${userData.address.line1}, ${userData.address.line2}</li>
+                </ul>
+                <p>Please be prepared for the appointment.</p>
+                <p>Best Regards,<br/>Your Pet Care System</p>
+            `,
+        };
+
+        // ✅ Email Notification to User
+        const userMailOptions = {
+            from: `Pets Khana<${process.env.SENDER_EMAIL}>`,
+            to: userData.email,
+            subject: "Appointment Confirmation",
+            html: `
+                <h3>Dear ${userData.name},</h3>
+                <p>Your appointment has been successfully booked.</p>
+                <ul>
+                    <li><strong>Date:</strong> ${slotDate.replace(/_/g, '/')}</li>
+                    <li><strong>Time:</strong> ${slotTime}</li>
+                    <li><strong>Vet:</strong> Dr. ${vetData.name}</li>
+                    <li><strong>Speciality:</strong> ${vetData.speciality}</li>
+                    <li><strong>Fees:</strong> $ ${vetData.fees}</li>
+                </ul>
+                <p>For any inquiries, contact us at ${process.env.SENDER_EMAIL}.</p>
+                <p>Best Regards,<br/>Your Pet Care System</p>
+            `,
+        };
+
+        // Send emails
+        transporter.sendMail(vetMailOptions, (error, info) => {
+            if (error) {
+                console.error("❌ Error sending email to Vet:", error);
+            } else {
+                console.log("✅ Email sent to Vet:", info.response);
+            }
+        });
+
+        transporter.sendMail(userMailOptions, (error, info) => {
+            if (error) {
+                console.error("❌ Error sending email to User:", error);
+            } else {
+                console.log("✅ Email sent to User:", info.response);
+            }
+        });
+
+        res.json({ success: true, message: 'Appointment Booked & Emails Sent' });
 
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.error("❌ Error Booking Appointment:", error);
+        res.json({ success: false, message: error.message });
     }
+};
 
-}
 
 // API to cancel appointment
 const cancelAppointment = async (req, res) => {

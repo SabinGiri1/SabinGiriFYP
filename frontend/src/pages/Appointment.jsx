@@ -62,29 +62,47 @@ const Appointment = () => {
 
     const bookAppointment = async () => {
         if (!token) {
-            toast.warning('Login to book appointment')
-            return navigate('/login')
+            toast.warning('Login to book appointment');
+            return navigate('/login');
         }
-        const date = vetSlots[slotIndex][0].datetime
-        let day = date.getDate()
-        let month = date.getMonth() + 1
-        let year = date.getFullYear()
-        const slotDate = day + "_" + month + "_" + year
+    
+        console.log("Vet Info:", vetInfo);
+    
+        if (!vetSlots[slotIndex] || vetSlots[slotIndex].length === 0) {
+            toast.error("No available slots for this date.");
+            return;
+        }
+    
+        const date = vetSlots[slotIndex][0].datetime;
+        let day = date.getDate();
+        let month = date.getMonth() + 1;
+        let year = date.getFullYear();
+        const slotDate = `${day}_${month}_${year}`;
+    
+        console.log("Booking Details:", { vetId, slotDate, slotTime });
+    
         try {
-            const { data } = await axios.post(backendUrl + '/api/user/book-appointment', { vetId, slotDate, slotTime }, { headers: { token } })
+            const { data } = await axios.post(
+                backendUrl + '/api/user/book-appointment',
+                { vetId, slotDate, slotTime },
+                { headers: { token } }
+            );
+    
+            console.log("API Response:", data);
+    
             if (data.success) {
-                toast.success(data.message)
-                getVetsData()
-                navigate('/my-appointments')
+                toast.success(data.message);
+                getVetsData();
+                navigate('/my-appointments');
             } else {
-                toast.error(data.message)
+                toast.error(data.message);
             }
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            console.error("Booking Error:", error);
+            toast.error(error.message);
         }
-    }
-
+    };
+    
     useEffect(() => {
         if (vets.length > 0) {
             fetchVetInfo()
@@ -126,7 +144,7 @@ const Appointment = () => {
 
             {/* Booking Slots */}
             <div className="mt-8">
-                <p className="text-xl font-semibold text-gray-800">Booking Slots</p>
+                <p className="text-xl font-semibold text-gray-800">Booking Slot</p>
                 <div className="flex gap-4 mt-4 overflow-x-auto">
                     {vetSlots.length && vetSlots.map((item, index) => (
                         <div

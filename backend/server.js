@@ -6,6 +6,8 @@ import connectCloudinary from "./config/cloudinary.js"
 import userRouter from "./routes/userRoute.js"
 import vetRouter from "./routes/vetRoute.js"
 import adminRouter from "./routes/adminRoute.js"
+import productRouter from "./routes/productRoute.js"
+import vaccinationRouter from './routes/vaccinationRoute.js';
 
 // app config
 const app = express()
@@ -21,6 +23,8 @@ app.use(cors())
 app.use("/api/user", userRouter)
 app.use("/api/admin", adminRouter)
 app.use("/api/vet", vetRouter)
+app.use("/api/products", productRouter)
+app.use('/api/vaccinations', vaccinationRouter);
 
 app.get("/", (req, res) => {
   res.send("API Working")
