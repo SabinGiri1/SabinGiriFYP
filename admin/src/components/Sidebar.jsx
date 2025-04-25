@@ -1,8 +1,8 @@
 import React, { useContext } from 'react'
-import { assets } from '../assets/assets'
 import { NavLink } from 'react-router-dom'
 import { VetContext } from '../context/VetContext'
 import { AdminContext } from '../context/AdminContext'
+import { Home, Calendar, User, PlusCircle, ShoppingCart, Box} from 'lucide-react'
 
 const Sidebar = () => {
   const { vToken } = useContext(VetContext)
@@ -21,7 +21,7 @@ const Sidebar = () => {
               }`
             }
           >
-            <img className="w-5" src={assets.home_icon} alt="Dashboard" />
+            <Home className="w-5" />
             <p>Dashboard</p>
           </NavLink>
           <NavLink
@@ -32,7 +32,7 @@ const Sidebar = () => {
               }`
             }
           >
-            <img className="w-5" src={assets.appointment_icon} alt="Appointments" />
+            <Calendar className="w-5" />
             <p>Appointments</p>
           </NavLink>
           <NavLink
@@ -43,8 +43,19 @@ const Sidebar = () => {
               }`
             }
           >
-            <img className="w-5" src={assets.add_icon} alt="Add Vet" />
+            <PlusCircle className="w-5" />
             <p>Add Vet</p>
+          </NavLink>
+          <NavLink
+            to={'/add-product'}
+            className={({ isActive }) =>
+              `flex items-center gap-3 py-3.5 px-6 hover:bg-indigo-50 transition-all ${
+                isActive ? 'bg-indigo-50 border-r-4 border-primary font-medium' : ''
+              }`
+            }
+          >
+            <ShoppingCart className="w-5" />
+            <p>Add Product</p>
           </NavLink>
           <NavLink
             to={'/vet-list'}
@@ -54,8 +65,19 @@ const Sidebar = () => {
               }`
             }
           >
-            <img className="w-5" src={assets.people_icon} alt="Vets List" />
+            <User className="w-5" />
             <p>Vets List</p>
+          </NavLink>
+          <NavLink
+            to={'/all-products'}
+            className={({ isActive }) =>
+              `flex items-center gap-3 py-3.5 px-6 hover:bg-indigo-50 transition-all ${
+                isActive ? 'bg-indigo-50 border-r-4 border-primary font-medium' : ''
+              }`
+            }
+          >
+            <Box className="w-5" />
+            <p>Product List</p>
           </NavLink>
         </ul>
       )}
@@ -71,7 +93,7 @@ const Sidebar = () => {
               }`
             }
           >
-            <img className="w-5" src={assets.home_icon} alt="Dashboard" />
+            <Home className="w-5" />
             <p>Dashboard</p>
           </NavLink>
           <NavLink
@@ -82,7 +104,7 @@ const Sidebar = () => {
               }`
             }
           >
-            <img className="w-5" src={assets.appointment_icon} alt="Appointments" />
+            <Calendar className="w-5" />
             <p>Appointments</p>
           </NavLink>
           <NavLink
@@ -93,7 +115,7 @@ const Sidebar = () => {
               }`
             }
           >
-            <img className="w-5" src={assets.people_icon} alt="Profile" />
+            <User className="w-5" />
             <p>Profile</p>
           </NavLink>
         </ul>

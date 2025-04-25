@@ -5,6 +5,15 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import { v2 as cloudinary } from "cloudinary";
 import userModel from "../models/userModel.js";
+import Product from "../models/Product.js";
+
+
+import multer from 'multer';
+import connectCloudinary from "../config/cloudinary.js";
+
+// Set up Cloudinary
+connectCloudinary();
+
 
 // API for admin login
 const loginAdmin = async (req, res) => {
@@ -147,6 +156,135 @@ const adminDashboard = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+
+/**
+ * Add a new product
+ * Handles the product details and uploads the image to Cloudinary
+ */
+export const addProduct = async (req, res) => {
+    const { name, description, price, category, stock } = req.body;
+    const imageFile = req.file; // The image file uploaded by the user
+
+    // Validation logic
+    if (!name || !description || !price || !category || !stock || !imageFile) {
+        return res.status(400).json({ error: 'All fields and image are required' });
+    }
+
+    try {
+        // Upload image to Cloudinary
+        const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+        const imageUrl = imageUpload.secure_url;
+
+        // Create the new product document
+        const newProduct = new Product({
+            name,
+            description,
+            price,
+            category,
+            stock,
+            imageUrl, // Save the Cloudinary image URL
+        });
+
+        await newProduct.save();
+
+        // Respond with success
+        res.status(201).json({ message: 'Product added successfully', product: newProduct });
+    } catch (error) {
+        console.error('Error saving product:', error);
+        res.status(500).json({ error: 'Failed to add product' });
+    }
+};
+
+
+// Update product route handler
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, category, stock } = req.body;
+    const imageFile = req.file; // This should be the uploaded file from the request
+
+    console.log(req.body); // Check if 'name', 'description', etc. are being sent
+    console.log(req.params); // Check if 'id' is being passed correctly
+    console.log(req.file); // Check if 'imageFile' is being received correctly
+
+    // Find the existing product
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    let imageUrl = product.imageUrl; // Keep the existing image if no new image is uploaded
+
+    // If a new image is uploaded, upload it to Cloudinary
+    if (imageFile) {
+      const imageUpload = await cloudinary.uploader.upload(imageFile.path, { resource_type: "image" });
+      imageUrl = imageUpload.secure_url; // Get the URL of the uploaded image
+    }
+
+    // Update the product with the new values
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      { name, description, price, category, stock, imageUrl },
+      { new: true } // Ensure the updated product is returned
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product update failed" });
+    }
+
+    res.json({ message: "Product updated successfully", product: updatedProduct });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+  
+  
+  // Delete a product by ID
+  export const deleteProduct = async (req, res) => {
+    try {
+      const { id } = req.params;
+  
+      const deletedProduct = await Product.findByIdAndDelete(id);
+  
+      if (!deletedProduct) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+  
+      res.json({ message: "Product deleted successfully" });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };
+  
+  // Get all products
+  export const getAllProducts = async (req, res) => {
+    try {
+      const products = await Product.find();
+      res.json(products);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };
+
+// Get product details by ID
+export const getProductDetails = async (req, res) => {
+    try {
+      const { productId } = req.params;
+  
+      const product = await Product.findById(productId);
+  
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+  
+      res.json(product);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  };
 
 export {
     loginAdmin,

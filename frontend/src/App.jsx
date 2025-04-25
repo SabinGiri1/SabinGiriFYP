@@ -14,6 +14,7 @@ import Footer from './components/Footer'
 import { ToastContainer, toast } from 'react-toastify';
 import ProductList from './components/ProductList'
 import MyVaccinations from './components/MyVaccinations'
+import ProductDetails from './pages/Productdetails'
 
 const App = () => {
   return (
@@ -34,6 +35,8 @@ const App = () => {
         <Route path='/my-vaccinations' element={<MyVaccinations/>} />
 
         <Route path="/shop" element={<ProductList />} />
+        <Route path="/product/:productId" element={<ProductDetails />} />
+
       </Routes>
       <Footer/>
     </div>

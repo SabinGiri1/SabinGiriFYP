@@ -14,6 +14,8 @@ import Login from './pages/Login';
 import VetAppointments from './pages/Vet/VetAppointments';
 import VetDashboard from './pages/Vet/VetDashboard';
 import VetProfile from './pages/Vet/VetProfile';
+import AddProductForm from './pages/Admin/AddProductForm';
+import AllProducts from './pages/Admin/AllProducts';
 
 const App = () => {
 
@@ -35,6 +37,10 @@ const App = () => {
           <Route path='/vet-dashboard' element={<VetDashboard />} />
           <Route path='/vet-appointments' element={<VetAppointments />} />
           <Route path='/vet-profile' element={<VetProfile />} />
+          <Route path='/add-product' element={<AddProductForm />} />
+          <Route path='/all-products' element={<AllProducts/>} />
+
+
         </Routes>
       </div>
     </div>
